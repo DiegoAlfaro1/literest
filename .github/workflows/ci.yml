@@ -1,0 +1,49 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Start PostgREST + Postgres
+        run: docker compose -f tests/conformance/docker-compose.yml up -d
+
+      - run: cargo clippy -- -D warnings
+      - run: cargo test
+      - run: cargo build --release
+
+      - name: Start literest
+        run: ./target/release/literest :memory: --port 3001 --init tests/conformance/schema.sql > literest.log 2>&1 &
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tests/conformance/package-lock.json
+      - name: Conformance (supabase-js against PostgREST vs literest)
+        working-directory: tests/conformance
+        run: npm ci && node run.mjs
+
+      - name: Binary size and startup time
+        if: always()
+        run: |
+          {
+            echo "### literest release build"
+            echo "- binary size: $(du -h target/release/literest | cut -f1) ($(stat -c %s target/release/literest) bytes)"
+            echo "- startup: \`$(cat literest.log | head -1)\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Server logs
+        if: failure()
+        run: |
+          cat literest.log
+          docker compose -f tests/conformance/docker-compose.yml logs

@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: postgres
+      TZ: UTC
+      # C collation sorts text byte-wise, like SQLite. Locale-aware sorting is a known difference.
+      POSTGRES_INITDB_ARGS: --locale=C --encoding=UTF8
+    volumes:
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    healthcheck:
+      # -h localhost: the init-time server only listens on the unix socket.
+      test: pg_isready -U postgres -h localhost
+      interval: 1s
+      retries: 30
+
+  postgrest:
+    image: postgrest/postgrest:v12.2.3
+    environment:
+      PGRST_DB_URI: postgres://postgres:postgres@db:5432/postgres
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: postgres
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy

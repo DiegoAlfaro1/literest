@@ -1,0 +1,18 @@
+[package]
+name = "literest"
+version = "0.1.0"
+edition = "2024"
+description = "A PostgREST-compatible REST server on top of SQLite, so supabase-js code runs against it unchanged"
+license = "MIT"
+repository = "https://github.com/DiegoAlfaro1/literest"
+
+[dependencies]
+axum = "0.8.9"
+rusqlite = { version = "0.41.1", features = ["bundled"] }
+serde_json = { version = "1.0.154", features = ["preserve_order"] }
+tokio = { version = "1.54.1", default-features = false, features = ["macros", "rt-multi-thread", "net"] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true

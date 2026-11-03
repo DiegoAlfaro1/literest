@@ -1,0 +1,12 @@
+{
+  "name": "literest-conformance",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node run.mjs"
+  },
+  "dependencies": {
+    "@supabase/postgrest-js": "2.118.0",
+    "@supabase/supabase-js": "2.118.0"
+  }
+}
