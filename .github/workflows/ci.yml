@@ -22,7 +22,8 @@ jobs:
       - run: cargo build --release
 
       - name: Start literest
-        run: ./target/release/literest :memory: --port 3001 --init tests/conformance/schema.sql > literest.log 2>&1 &
+        run: |
+          ./target/release/literest :memory: --port 3001 --init tests/conformance/schema.sql > literest.log 2>&1 &
 
       - uses: actions/setup-node@v4
         with:
